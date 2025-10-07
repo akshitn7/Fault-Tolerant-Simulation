@@ -2,56 +2,42 @@
 public class Client 
 {
 	int id;
-	boolean isAlive;
-	boolean isWriter;
+	boolean isAlive = true;
 	Server leader;
 	String content = "";
 
-	public Client(int id, boolean isWriter, Server leader)
+	public Client(int id, Server leader)
 	{
         this.id = id;
-        this.isWriter = isWriter;
         this.leader = leader;
     }
-
-	void requestLock()
+	
+	//Read Request from Client
+	String readRequest()
+	{
+		if(!leader.isLocked) {
+			content = leader.handleRead();
+			return "Read Successful";
+		}
+		else {
+			return "Can't Handle Read Request. File is locked by some writer Client.";
+		}
+	}
+	//Lock Request from Client
+	boolean requestLock()
 	{	
-		if (isWriter) {
-            leader.acquireWriteLock(id);
-        } else {
-            leader.acquireReadLock(id);
-        }
+		boolean granted = leader.handleLock(id);
+		return granted;
+	
 	}
-	void writeAndReleaseLock() 
+	//Write new Content and Release Lock
+	void writeAndReleaseLock(String newContent) 
 	{
-		if (isWriter) {
-            leader.write(id, "Data from Client-" + id);
-            leader.releaseWriteLock(id);
-        }	
+		leader.handleWriteandRelease(newContent);
 	}
-	void readContent()
-	{
-		if (!isWriter) {
-            leader.read(id);
-            leader.releaseReadLock(id);
-	}
+	//Simulate crash : Toggle the alive state.
 	void simulateCrash()
 	{
-		isAlive = false;
-        System.out.println("Client-" + id + " crashed!");
+		isAlive = !isAlive;
 	}
-
-	public void run()
-	{
-        if (isWriter)
-		{
-            requestLock();
-            writeAndReleaseLock();
-        }
-		else
-		{
-            requestLock();
-            readContent();
-        }
-    }
 }
