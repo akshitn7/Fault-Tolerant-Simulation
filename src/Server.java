@@ -42,7 +42,7 @@ public class Server {
     
     //Update the file content with new content and release the lock
     void handleWriteandRelease(String newContent) {
-    	content = newContent;
+    	content += newContent;
     	isLocked = false;
     	lockedBy = -1;
     }

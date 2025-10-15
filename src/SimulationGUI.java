@@ -164,9 +164,14 @@ public class SimulationGUI extends JFrame implements ActionListener {
             else if (source == crashButtons[i]) {
             	clients[i].simulateCrash();
             	if(clients[i].isAlive) {
+            		readButtons[i].setEnabled(true);
+            		requestLockButtons[i].setEnabled(true);
             		clientLogAreas[i].append(clientName + " recovered!\n");
             		crashButtons[i].setText("Simulate Crash");
             	} else {
+            		readButtons[i].setEnabled(false);
+            		requestLockButtons[i].setEnabled(false);
+            		writeButtons[i].setEnabled(false);
             		clientLogAreas[i].append(clientName + " crashed!\n");
             		crashButtons[i].setText("Recover");
             	}
