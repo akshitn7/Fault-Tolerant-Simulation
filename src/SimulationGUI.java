@@ -14,9 +14,11 @@ public class SimulationGUI extends JFrame implements ActionListener {
 
     //File content Area
     JTextArea fileContentArea;
+    
+    //Text Editor Area
+    JTextArea editorArea;
 
     //Client components
-    JTextField[] clientInputFields = new JTextField[4];
     JTextArea[] clientLogAreas = new JTextArea[4];
     JButton[] readButtons = new JButton[4];
     JButton[] requestLockButtons = new JButton[4];
@@ -65,6 +67,13 @@ public class SimulationGUI extends JFrame implements ActionListener {
         fileContentArea = new JTextArea(servers[0].handleRead(), 5, 20);
         fileContentArea.setEditable(false);
         fileStatePanel.add(new JScrollPane(fileContentArea), BorderLayout.CENTER);
+        
+        //Editor Panel
+        JPanel editorPanel = new JPanel(new BorderLayout());
+        editorPanel.setBorder(BorderFactory.createTitledBorder("Client Editor"));
+        editorArea = new JTextArea("", 5, 20);
+        editorArea.setEditable(false);
+        editorPanel.add(new JScrollPane(editorArea), BorderLayout.CENTER);
 
         //Clients Panel
         JPanel clientsGridPanel = new JPanel(new GridLayout(1, 4, 10, 10));
@@ -74,7 +83,6 @@ public class SimulationGUI extends JFrame implements ActionListener {
             JPanel clientPanel = new JPanel(new BorderLayout(5, 5));
             clientPanel.setBorder(BorderFactory.createTitledBorder("Client " + (i + 1)));
 
-            clientInputFields[i] = new JTextField();
             clientLogAreas[i] = new JTextArea("Client-" + (i + 1) + " initialized.\n", 5, 5);
             clientLogAreas[i].setEditable(false);
 
@@ -95,7 +103,6 @@ public class SimulationGUI extends JFrame implements ActionListener {
             writeButtons[i].addActionListener(this);
             crashButtons[i].addActionListener(this);
 
-            clientPanel.add(clientInputFields[i], BorderLayout.NORTH);
             clientPanel.add(new JScrollPane(clientLogAreas[i]), BorderLayout.CENTER);
             clientPanel.add(buttonPanel, BorderLayout.SOUTH);
 
@@ -105,6 +112,7 @@ public class SimulationGUI extends JFrame implements ActionListener {
         //Add Panels to the Main Panel
         mainPanel.add(serverClusterPanel);
         mainPanel.add(fileStatePanel);
+        mainPanel.add(editorPanel);
         mainPanel.add(clientsGridPanel);
         add(mainPanel);
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
@@ -139,6 +147,9 @@ public class SimulationGUI extends JFrame implements ActionListener {
                 clientLogAreas[i].append(clientName + " request to read the file.\n");
                 String response = clients[i].readRequest();
                 clientLogAreas[i].append(response + "\n");
+                if(response == "Read Successful") {
+                	editorArea.setText(clients[i].content);
+                }
             } 
             //Request Lock Button: add log, request for lock, if granted enable write button.
             else if (source == requestLockButtons[i]) {
@@ -146,6 +157,8 @@ public class SimulationGUI extends JFrame implements ActionListener {
                 boolean granted = clients[i].requestLock();
                 if(granted) {
                 	clientLogAreas[i].append(clientName + " was granted lock.\n");
+                	editorArea.setEditable(true);
+                	editorArea.setText(servers[0].handleRead());
                 } else {
                 	clientLogAreas[i].append(clientName + " was denied lock.\n");
                 }
@@ -153,11 +166,12 @@ public class SimulationGUI extends JFrame implements ActionListener {
             } 
             //Write Button: Write the new content to server file and release the lock. Update file content area.
             else if (source == writeButtons[i]) {
-            	String newContent = clientInputFields[i].getText();
+            	String newContent = editorArea.getText();
             	clients[i].writeAndReleaseLock(newContent);
                 clientLogAreas[i].append(clientName + " wrote and released lock.\n");
-                fileContentArea.setText(newContent);
-                clientInputFields[i].setText("");
+                fileContentArea.setText(servers[0].handleRead());
+                editorArea.setText("");
+                editorArea.setEditable(false);
                 writeButtons[i].setEnabled(false);
             } 
             // Simulate Crash : Toggle the online status

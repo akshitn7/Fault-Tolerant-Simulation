@@ -15,19 +15,25 @@ public class Client
 	//Read Request from Client
 	String readRequest()
 	{
-		if(!leader.isLocked) {
+		if(!leader.isLocked && leader.isAlive) {
 			content = leader.handleRead();
 			return "Read Successful";
 		}
-		else {
+		else if(leader.isAlive){
 			return "Can't Handle Read Request. File is locked by some writer Client.";
+		} else {
+			return "Server is dead.";
 		}
 	}
 	//Lock Request from Client
 	boolean requestLock()
 	{	
-		boolean granted = leader.handleLock(id);
-		return granted;
+		if(leader.isAlive) {
+			boolean granted = leader.handleLock(id);
+			return granted;
+		} else {
+			return false;
+		}
 	
 	}
 	//Write new Content and Release Lock
